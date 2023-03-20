@@ -1,4 +1,7 @@
 class Rational {
+    #numerator
+    #denominator
+
     constructor(numerator = 0, denominator = 1) {
         if (denominator < 0) {
             numerator *= -1
@@ -7,24 +10,24 @@ class Rational {
         if (numerator === 0) {
             denominator = 1
         }
-        this.numerator = numerator
-        this.denominator = denominator
-        this.reduceFraction()
+        this.#numerator = numerator
+        this.#denominator = denominator
+        this.#reduceFraction()
     }
 
     print() {
-        console.log(`${this.numerator}/${this.denominator}`) //
-        return `${this.numerator}/${this.denominator}`
+        // console.log(`${this.numerator}/${this.denominator}`) //
+        return `${this.#numerator}/${this.#denominator}`
     }
 
-    reduceFraction() {
-        let a = Math.abs(this.numerator)
-        let b = Math.abs(this.denominator)
-        let smallest = a < b ? a : b
+    #reduceFraction() {
+        let a = Math.abs(this.#numerator),
+            b = Math.abs(this.#denominator),
+            smallest = a < b ? a : b
         for (let i = 2; i <= smallest; i++) {
-            if (a % i === 0 && b % i === 0) {
-                this.numerator /= i
-                this.denominator /= i
+            if (this.#numerator % i === 0 && this.#denominator % i === 0) {
+                this.#numerator /= i
+                this.#denominator /= i
                 smallest /= i
             }
         }
@@ -35,9 +38,9 @@ class Rational {
             number = new Rational(number)
         }
         let numerator =
-            this.numerator * number.denominator +
-            this.denominator * number.numerator
-        let denominator = this.denominator * number.denominator
+            this.#numerator * number.#denominator +
+            this.#denominator * number.#numerator
+        let denominator = this.#denominator * number.#denominator
         return new Rational(numerator, denominator)
     }
 
@@ -45,8 +48,11 @@ class Rational {
         if (!(number instanceof Rational)) {
             number = new Rational(number)
         }
-        let numerator = number.numerator * -1
-        return this.sum(new Rational(numerator, number.denominator))
+        let numerator =
+            this.#numerator * number.#denominator -
+            this.#denominator * number.#numerator
+        let denominator = this.#denominator * number.#denominator
+        return new Rational(numerator, denominator)
     }
 
     multiply(number) {
@@ -54,8 +60,8 @@ class Rational {
             number = new Rational(number)
         }
         return new Rational(
-            this.numerator * number.numerator,
-            this.denominator * number.denominator
+            this.#numerator * number.#numerator,
+            this.#denominator * number.#denominator
         )
     }
 
@@ -64,8 +70,8 @@ class Rational {
             number = new Rational(number)
         }
         return new Rational(
-            this.numerator * number.denominator,
-            this.denominator * number.numerator
+            this.#numerator * number.#denominator,
+            this.#denominator * number.#numerator
         )
     }
 
@@ -74,8 +80,8 @@ class Rational {
             number = new Rational(number)
         }
         return (
-            this.numerator === number.numerator &&
-            this.denominator === number.denominator
+            this.#numerator === number.#numerator &&
+            this.#denominator === number.#denominator
         )
     }
 }
@@ -92,17 +98,30 @@ class Matrix {
         this.determinant = ""
     }
 
-    calculateRank() {}
+    #copyMatrix() {
+        let row,
+            copy = []
+        for (let i = 0; i < this.volume; i++) {
+            row = []
+            for (let j = 0; j < this.volume; j++) {
+                row.push(this.matrix[i][j])
+            }
+            copy.push(row)
+        }
+        return copy
+    }
+
+    // calculateRank() {}
 
     calculateDeterminant() {
-        let det = new Rational(1)
-        let total = new Rational(1)
-        let temp = Array(this.volume + 1).fill(0)
+        let matrixCopy = this.#copyMatrix(),
+            det = new Rational(1),
+            total = new Rational(1),
+            temp = Array(this.volume).fill(0)
         let num1, num2, index
-
         for (let i = 0; i < this.volume; i++) {
             index = i
-            while (index < this.volume && this.matrix[index][i].isEqual(0)) {
+            while (index < this.volume && matrixCopy[index][i].isEqual(0)) {
                 index++
             }
             if (index === this.volume) {
@@ -110,35 +129,57 @@ class Matrix {
             }
             if (index !== i) {
                 for (let j = 0; j < this.volume; j++) {
-                    ;[this.matrix[index][j], this.matrix[i][j]] = [
-                        this.matrix[i][j],
-                        this.matrix[index][j],
+                    ;[matrixCopy[index][j], matrixCopy[i][j]] = [
+                        matrixCopy[i][j],
+                        matrixCopy[index][j],
                     ]
                 }
                 det = det.multiply(Math.pow(-1, index - i))
             }
             for (let j = 0; j < this.volume; j++) {
-                temp[j] = this.matrix[i][j]
+                temp[j] = matrixCopy[i][j]
             }
             for (let j = i + 1; j < this.volume; j++) {
                 num1 = temp[i]
-                num2 = this.matrix[j][i]
+                num2 = matrixCopy[j][i]
                 for (let k = 0; k < this.volume; k++) {
-                    this.matrix[j][k] = num1
-                        .multiply(this.matrix[j][k])
+                    matrixCopy[j][k] = num1
+                        .multiply(matrixCopy[j][k])
                         .minus(num2.multiply(temp[k]))
                 }
                 total = total.multiply(num1)
             }
         }
         for (let i = 0; i < this.volume; i++) {
-            det = det.multiply(this.matrix[i][i])
+            det = det.multiply(matrixCopy[i][i])
         }
         this.determinant = det.divide(total)
         return this.determinant
     }
 
-    transpose() {}
+    transpose() {
+        for (let i = 1; i < this.volume; i++) {
+            for (let j = 0; j < i; j++) {
+                ;[this.matrix[i][j], this.matrix[j][i]] = [
+                    this.matrix[j][i],
+                    this.matrix[i][j],
+                ]
+            }
+        }
+    }
+
+    print() {
+        console.log("Matrix:")
+        let row
+        for (let i = 0; i < this.volume; i++) {
+            row = ""
+            for (let j = 0; j < this.volume; j++) {
+                row += `${this.matrix[i][j].print()} `
+            }
+            console.log(row)
+        }
+        console.log("\n")
+    }
 }
 
 const matrixApp = new Vue({
@@ -146,5 +187,14 @@ const matrixApp = new Vue({
     data: {
         num: new Rational(15, -56),
         matr: new Matrix(),
+    },
+    methods: {
+        printMethod() {
+            this.matr.print()
+            this.matr.transpose()
+            this.matr.print()
+            console.log(`det=${this.matr.calculateDeterminant().print()}`)
+            this.matr.print()
+        },
     },
 })
