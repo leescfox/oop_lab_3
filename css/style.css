@@ -1,0 +1,12 @@
+body {
+    font-family: sans-serif;
+}
+
+.appWrapper {
+    width: 500px;
+    margin: 0 auto;
+}
+
+.dimensionsLabel {
+    display: block;
+}
