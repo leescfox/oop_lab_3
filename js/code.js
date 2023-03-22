@@ -15,22 +15,21 @@ class Rational {
         this.#reduceFraction()
     }
 
-    print() {
-        // console.log(`${this.numerator}/${this.denominator}`) //
-        return `${this.#numerator}/${this.#denominator}`
-    }
-
     #reduceFraction() {
         let a = Math.abs(this.#numerator),
             b = Math.abs(this.#denominator),
             smallest = a < b ? a : b
-        for (let i = 2; i <= smallest; i++) {
+        for (let i = smallest; i > 1; i--) {
             if (this.#numerator % i === 0 && this.#denominator % i === 0) {
                 this.#numerator /= i
                 this.#denominator /= i
-                smallest /= i
+                break
             }
         }
+    }
+
+    print() {
+        return `${this.#numerator}/${this.#denominator}`
     }
 
     sum(number) {
@@ -87,15 +86,18 @@ class Rational {
 }
 
 class Matrix {
+    #rank
+    #determinant
+
     constructor() {
         this.volume = 3
         this.matrix = [
             [new Rational(3, 1), new Rational(3, 2), new Rational(2, 3)],
-            [new Rational(4, 1), new Rational(3, 4), new Rational(5, 2)],
+            [new Rational(12, 4), new Rational(6, 4), new Rational(4, 6)],
             [new Rational(1, 2), new Rational(1, 1), new Rational(2, 1)],
         ]
-        this.rank = ""
-        this.determinant = ""
+        this.#rank = ""
+        this.#determinant = ""
     }
 
     #copyMatrix() {
@@ -111,7 +113,50 @@ class Matrix {
         return copy
     }
 
-    // calculateRank() {}
+    calculateRank() {
+        let rank = this.volume,
+            matrixCopy = this.#copyMatrix(),
+            reduce
+        for (let row = 0; row < rank; row++) {
+            if (!matrixCopy[row][row].isEqual(0)) {
+                for (let col = 0; col < this.volume; col++) {
+                    if (col !== row) {
+                        let mult = matrixCopy[col][row].divide(
+                            matrixCopy[row][row]
+                        )
+                        for (let i = 0; i < rank; i++) {
+                            matrixCopy[col][i] = matrixCopy[col][i].minus(
+                                mult.multiply(matrixCopy[row][i])
+                            )
+                        }
+                    }
+                }
+            } else {
+                reduce = true
+                for (let i = row + 1; i < this.volume; i++) {
+                    if (!matrixCopy[i][row].isEqual(0)) {
+                        for (let j = 0; j < rank; j++) {
+                            ;[matrixCopy[row][j], matrixCopy[i][j]] = [
+                                matrixCopy[i][j],
+                                matrixCopy[row][j],
+                            ]
+                        }
+                        reduce = false
+                        break
+                    }
+                }
+                if (reduce) {
+                    rank--
+                    for (let i = 0; i < this.volume; i++) {
+                        matrixCopy[i][row] = matrixCopy[i][rank]
+                    }
+                }
+                row--
+            }
+        }
+        this.#rank = rank
+        return this.#rank
+    }
 
     calculateDeterminant() {
         let matrixCopy = this.#copyMatrix(),
@@ -153,8 +198,8 @@ class Matrix {
         for (let i = 0; i < this.volume; i++) {
             det = det.multiply(matrixCopy[i][i])
         }
-        this.determinant = det.divide(total)
-        return this.determinant
+        this.#determinant = det.divide(total)
+        return this.#determinant
     }
 
     transpose() {
@@ -166,6 +211,7 @@ class Matrix {
                 ]
             }
         }
+        return this
     }
 
     print() {
@@ -182,19 +228,63 @@ class Matrix {
     }
 }
 
+// class Application {
+//     constructor() {
+//         this.matrixInstance = new Matrix()
+//     }
+
+//     menu() {
+
+//     }
+// }
+
 const matrixApp = new Vue({
     el: "#app",
     data: {
-        num: new Rational(15, -56),
-        matr: new Matrix(),
+        state: "menu",
+        menuOptions: [
+            "Ввод матрицы",
+            "Вычислить детерминант матрицы",
+            "Вычислить ранг матрицы",
+            "Транспонировать матрицу",
+            "Вывод матрицы",
+        ],
+        output: "",
+        matrix: new Matrix(),
     },
     methods: {
         printMethod() {
-            this.matr.print()
-            this.matr.transpose()
-            this.matr.print()
-            console.log(`det=${this.matr.calculateDeterminant().print()}`)
-            this.matr.print()
+            this.matrix.print()
+            // this.matr.transpose()
+            // this.matr.print()
+            // console.log(`det=${this.matr.calculateDeterminant().print()}`)
+            // this.matr.print()
+            console.log(`rank=${this.matrix.calculateRank()}`)
+            console.log(`det=${this.matrix.calculateDeterminant().print()}`)
+            this.matrix.print()
+        },
+        menuMethod(option) {
+            switch (option) {
+                case 0:
+                    this.state = "input"
+                    break
+                case 1:
+                    this.state = "output"
+                    this.output = this.matrix.calculateDeterminant().print()
+                    break
+                case 2:
+                    this.state = "output"
+                    this.output = this.matrix.calculateRank()
+                    break
+                case 3:
+                    this.state = "output"
+                    this.output = this.matrix.transpose().print() // ?
+                    break
+                case 4:
+                    this.state = "output"
+                    this.output = this.matrix.print()
+                    break
+            }
         },
     },
 })

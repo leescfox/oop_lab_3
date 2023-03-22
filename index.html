@@ -11,6 +11,17 @@
     </head>
     <body>
         <div id="app" class="appWrapper">
+            <div class="menu">
+                <div class="d-grid gap-2">
+                    <button
+                        class="btn btn-secondary"
+                        type="button"
+                        v-for="(option, index) in menuOptions"
+                    >
+                        {{ option }}
+                    </button>
+                </div>
+            </div>
             <label class="dimensionsLabel">
                 <span>Введите размерность матрицы:</span>
                 <div class="input-group mb-3">
