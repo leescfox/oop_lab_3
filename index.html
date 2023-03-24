@@ -11,30 +11,48 @@
     </head>
     <body>
         <div id="app" class="appWrapper">
-            <div class="menu">
+            <div class="menu" v-if="state === 'menu'">
                 <div class="d-grid gap-2">
                     <button
                         class="btn btn-secondary"
                         type="button"
                         v-for="(option, index) in menuOptions"
+                        @click="menuMethod(index)"
                     >
                         {{ option }}
                     </button>
                 </div>
             </div>
-            <label class="dimensionsLabel">
-                <span>Введите размерность матрицы:</span>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" />
-                    <button
-                        class="btn btn-primary"
-                        type="button"
-                        @click="printMethod"
-                    >
-                        Отправить
-                    </button>
+            <div class="input" v-else-if="state === 'input'">
+                <div v-if="!input.volumeSuccess">
+                    <label class="dimensionsLabel">
+                        <span>Введите размерность матрицы:</span>
+                        <div class="input-group mb-3">
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="input.volumeValue"
+                                @input="volumeInput"
+                            />
+                            <button
+                                class="btn btn-primary"
+                                type="button"
+                                :disabled="input.volumeBtnDisabled"
+                                @click="volumeInputSuccess"
+                            >
+                                Отправить
+                            </button>
+                        </div>
+                    </label>
                 </div>
-            </label>
+                <div v-else>
+                    <table></table>
+                </div>
+            </div>
+            <div class="output" v-else-if="state === 'output'">
+                <h3>{{ output.headline }}</h3>
+                <div class="outputContainer">{{ output.content }}</div>
+            </div>
         </div>
     </body>
     <script src="bootstrap/bootstrap.min.js"></script>

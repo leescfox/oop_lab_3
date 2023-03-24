@@ -214,29 +214,16 @@ class Matrix {
         return this
     }
 
-    print() {
-        console.log("Matrix:")
-        let row
+    show() {
+        let matrixOutput = ""
         for (let i = 0; i < this.volume; i++) {
-            row = ""
             for (let j = 0; j < this.volume; j++) {
-                row += `${this.matrix[i][j].print()} `
+                matrixOutput += `${this.matrix[i][j].print()} `
             }
-            console.log(row)
         }
-        console.log("\n")
+        return matrixOutput
     }
 }
-
-// class Application {
-//     constructor() {
-//         this.matrixInstance = new Matrix()
-//     }
-
-//     menu() {
-
-//     }
-// }
 
 const matrixApp = new Vue({
     el: "#app",
@@ -249,7 +236,17 @@ const matrixApp = new Vue({
             "Транспонировать матрицу",
             "Вывод матрицы",
         ],
-        output: "",
+        input: {
+            volumeValue: "",
+            volumePattern: /^[1-9]\d*$/,
+            volumeBtnDisabled: true,
+            volumeSuccess: false,
+            matrixArray: [],
+        },
+        output: {
+            headline: "",
+            content: "",
+        },
         matrix: new Matrix(),
     },
     methods: {
@@ -266,25 +263,59 @@ const matrixApp = new Vue({
         menuMethod(option) {
             switch (option) {
                 case 0:
+                    this.input.volumeValue = ""
+                    this.input.volumeBtnDisabled = true
+                    this.input.volumeSuccess = false
                     this.state = "input"
                     break
                 case 1:
+                    this.output.headline = "Детерминант матрицы"
+                    this.output.content = `Детерминант матрицы: ${this.matrix
+                        .calculateDeterminant()
+                        .print()}`
                     this.state = "output"
-                    this.output = this.matrix.calculateDeterminant().print()
                     break
                 case 2:
+                    this.output.headline = "Ранг матрицы"
+                    this.output.content = `Ранг матрицы: ${this.matrix.calculateRank()}`
                     this.state = "output"
-                    this.output = this.matrix.calculateRank()
                     break
                 case 3:
+                    this.output.headline = "Транспонирование"
+                    this.output.content = `Матрица после транспонирования: ${this.matrix
+                        .transpose()
+                        .show()}`
                     this.state = "output"
-                    this.output = this.matrix.transpose().print() // ?
                     break
                 case 4:
+                    this.output.headline = "Вывод матрицы"
+                    this.output.content = `Матрица: ${this.matrix.show()}`
                     this.state = "output"
-                    this.output = this.matrix.print()
                     break
             }
+        },
+        volumeInput(e) {
+            this.input.volumeBtnDisabled = !this.input.volumePattern.test(
+                e.target.value
+            )
+        },
+        volumeInputSuccess() {
+            let temp
+            this.matrix.volume = +this.input.volumeValue
+            this.input.matrixArray = new Array(this.matrix.volume)
+            for (let i = 0; i < this.matrix.volume; i++) {
+                temp = new Array(this.matrix.volume)
+                for (let j = 0; j < this.matrix.volume; j++) {
+                    temp[j] = {
+                        value: "",
+                        correct: false,
+                    }
+                }
+                this.input.matrixArray[i] = temp
+            }
+            this.input.volumeSuccess = true
+            // теперь создаём таблицу ввода
+            // на инпуте проверяем совпадение с паттерном который напишем в объект input{}
         },
     },
 })
