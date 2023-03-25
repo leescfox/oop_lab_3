@@ -10,52 +10,111 @@
         <title>Lab_3</title>
     </head>
     <body>
-        <div id="app" class="appWrapper">
-            <div class="menu" v-if="state === 'menu'">
-                <div class="d-grid gap-2">
-                    <button
-                        class="btn btn-secondary"
-                        type="button"
-                        v-for="(option, index) in menuOptions"
-                        @click="menuMethod(index)"
-                    >
-                        {{ option }}
-                    </button>
+        <div id="app" class="">
+            <div class="appWrapper pt-4">
+                <div class="menu" v-if="state === 'menu'">
+                    <div class="d-grid gap-2">
+                        <button
+                            class="btn btn-success"
+                            type="button"
+                            v-for="(option, index) in menuOptions"
+                            @click="menuMethod(index)"
+                            :key="index"
+                        >
+                            {{ option }}
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="input" v-else-if="state === 'input'">
-                <div v-if="!input.volumeSuccess">
-                    <label class="dimensionsLabel">
-                        <span>Введите размерность матрицы:</span>
-                        <div class="input-group mb-3">
-                            <input
-                                type="text"
-                                class="form-control"
-                                v-model="input.volumeValue"
-                                @input="volumeInput"
-                            />
+                <div class="input" v-else-if="state === 'input'">
+                    <form
+                        class="volumeInput"
+                        v-if="!input.volumeSuccess"
+                        @submit.prevent="volumeInputSuccess"
+                    >
+                        <label class="dimensionsLabel">
+                            <span>Введите размерность матрицы:</span>
+                            <div class="input-group">
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    @input="volumeInput"
+                                />
+                                <button
+                                    class="btn btn-primary"
+                                    :disabled="input.volumeBtnDisabled"
+                                >
+                                    Отправить
+                                </button>
+                            </div>
+                        </label>
+                    </form>
+                    <form v-else @submit.prevent="inputFinish">
+                        <div class="tableContainer">
+                            <table class="matrixTable">
+                                <tbody>
+                                    <tr v-for="i in matrix.volume" :key="i">
+                                        <td v-for="j in matrix.volume" :key="j">
+                                            <input
+                                                class="form-control matrixElem"
+                                                :class="input.matrixArray[i-1][j-1].border"
+                                                @input="onElementInput($event, i-1, j-1)"
+                                            />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="btnContainer mt-3">
                             <button
                                 class="btn btn-primary"
-                                type="button"
-                                :disabled="input.volumeBtnDisabled"
-                                @click="volumeInputSuccess"
+                                :disabled="isInputFinished"
                             >
-                                Отправить
+                                Ввести матрицу
                             </button>
                         </div>
-                    </label>
+                    </form>
                 </div>
-                <div v-else>
-                    <table></table>
+                <div class="output" v-else-if="state === 'output'">
+                    <h3>{{ output.headline }}</h3>
+                    <div>{{ output.content }}</div>
+                    <div class="tableContainer" v-if="output.showMatrix">
+                        <table class="matrixTable table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th
+                                        scope="col"
+                                        v-for="num in matrix.volume"
+                                        :key="num"
+                                    >
+                                        {{num}}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="i in matrix.volume" :key="i">
+                                    <th scope="row">{{i}}</th>
+                                    <td v-for="j in matrix.volume" :key="j">
+                                        {{matrix.matrix[i-1][j-1].print()}}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="btnContainer mt-3">
+                        <button
+                            class="btn btn-primary"
+                            type="button"
+                            @click="toMenu"
+                        >
+                            В меню
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="output" v-else-if="state === 'output'">
-                <h3>{{ output.headline }}</h3>
-                <div class="outputContainer">{{ output.content }}</div>
             </div>
         </div>
     </body>
     <script src="bootstrap/bootstrap.min.js"></script>
-    <script src="js/vue.js"></script>
+    <script src="js/vue.min.js"></script>
     <script src="js/code.js"></script>
 </html>

@@ -7,6 +7,30 @@ body {
     margin: 0 auto;
 }
 
+.volumeInput {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
 .dimensionsLabel {
     display: block;
+}
+
+.tableContainer {
+    max-height: 70vh;
+    overflow: auto;
+}
+
+.matrixTable {
+    margin: 0 auto;
+}
+
+.matrixElem {
+    width: 80px;
+    height: 50px;
+    border-width: 3px;
+}
+
+.btnContainer {
+    text-align: center;
 }

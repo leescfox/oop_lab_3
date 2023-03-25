@@ -3,6 +3,8 @@ class Rational {
     #denominator
 
     constructor(numerator = 0, denominator = 1) {
+        numerator = +numerator
+        denominator = +denominator
         if (denominator < 0) {
             numerator *= -1
             denominator *= -1
@@ -29,7 +31,9 @@ class Rational {
     }
 
     print() {
-        return `${this.#numerator}/${this.#denominator}`
+        return `${this.#numerator}${
+            this.#denominator === 1 ? "" : `/${this.#denominator}`
+        }`
     }
 
     sum(number) {
@@ -213,16 +217,6 @@ class Matrix {
         }
         return this
     }
-
-    show() {
-        let matrixOutput = ""
-        for (let i = 0; i < this.volume; i++) {
-            for (let j = 0; j < this.volume; j++) {
-                matrixOutput += `${this.matrix[i][j].print()} `
-            }
-        }
-        return matrixOutput
-    }
 }
 
 const matrixApp = new Vue({
@@ -242,24 +236,18 @@ const matrixApp = new Vue({
             volumeBtnDisabled: true,
             volumeSuccess: false,
             matrixArray: [],
+            matrixElemPattern: /^(?:0|-?[1-9]\d*)(\/[1-9]\d*)?$/,
+            matrixCorrectCount: 0,
+            matrixHasToBeCorrect: 0,
         },
         output: {
             headline: "",
             content: "",
+            showMatrix: false,
         },
         matrix: new Matrix(),
     },
     methods: {
-        printMethod() {
-            this.matrix.print()
-            // this.matr.transpose()
-            // this.matr.print()
-            // console.log(`det=${this.matr.calculateDeterminant().print()}`)
-            // this.matr.print()
-            console.log(`rank=${this.matrix.calculateRank()}`)
-            console.log(`det=${this.matrix.calculateDeterminant().print()}`)
-            this.matrix.print()
-        },
         menuMethod(option) {
             switch (option) {
                 case 0:
@@ -273,49 +261,106 @@ const matrixApp = new Vue({
                     this.output.content = `Детерминант матрицы: ${this.matrix
                         .calculateDeterminant()
                         .print()}`
+                    this.output.showMatrix = false
                     this.state = "output"
                     break
                 case 2:
                     this.output.headline = "Ранг матрицы"
                     this.output.content = `Ранг матрицы: ${this.matrix.calculateRank()}`
+                    this.output.showMatrix = false
                     this.state = "output"
                     break
                 case 3:
+                    this.matrix.transpose()
                     this.output.headline = "Транспонирование"
-                    this.output.content = `Матрица после транспонирования: ${this.matrix
-                        .transpose()
-                        .show()}`
+                    this.output.content = "Матрица после транспонирования:"
+                    this.output.showMatrix = true
                     this.state = "output"
                     break
                 case 4:
                     this.output.headline = "Вывод матрицы"
-                    this.output.content = `Матрица: ${this.matrix.show()}`
+                    this.output.content = "Матрица:"
+                    this.output.showMatrix = true
                     this.state = "output"
                     break
             }
         },
         volumeInput(e) {
+            this.input.volumeValue = e.target.value
             this.input.volumeBtnDisabled = !this.input.volumePattern.test(
-                e.target.value
+                this.input.volumeValue
             )
         },
         volumeInputSuccess() {
-            let temp
             this.matrix.volume = +this.input.volumeValue
             this.input.matrixArray = new Array(this.matrix.volume)
             for (let i = 0; i < this.matrix.volume; i++) {
-                temp = new Array(this.matrix.volume)
+                this.$set(
+                    this.input.matrixArray,
+                    i,
+                    new Array(this.matrix.volume)
+                )
                 for (let j = 0; j < this.matrix.volume; j++) {
-                    temp[j] = {
-                        value: "",
-                        correct: false,
-                    }
+                    this.$set(this.input.matrixArray[i], j, {})
+                    this.$set(this.input.matrixArray[i][j], "value", "")
+                    this.$set(this.input.matrixArray[i][j], "correct", false)
+                    this.$set(this.input.matrixArray[i][j], "border", "")
                 }
-                this.input.matrixArray[i] = temp
             }
+            this.input.matrixCorrectCount = 0
+            this.input.matrixHasToBeCorrect =
+                this.matrix.volume * this.matrix.volume
             this.input.volumeSuccess = true
-            // теперь создаём таблицу ввода
-            // на инпуте проверяем совпадение с паттерном который напишем в объект input{}
+        },
+        onElementInput(e, i, j) {
+            this.input.matrixArray[i][j].value = e.target.value
+            let testResult = this.input.matrixElemPattern.test(
+                this.input.matrixArray[i][j].value
+            )
+            this.input.matrixArray[i][j].border = `border-${
+                testResult ? "success" : "danger"
+            }`
+            if (this.input.matrixArray[i][j].correct === testResult) return
+            if (testResult) {
+                this.input.matrixArray[i][j].correct = true
+                this.input.matrixCorrectCount++
+            } else {
+                this.input.matrixArray[i][j].correct = false
+                this.input.matrixCorrectCount--
+            }
+        },
+        inputFinish() {
+            this.matrix.matrix = new Array(this.matrix.volume)
+            for (let i = 0; i < this.matrix.volume; i++) {
+                this.matrix.matrix[i] = new Array(this.matrix.volume)
+                for (let j = 0; j < this.matrix.volume; j++) {
+                    this.matrix.matrix[i][j] = rationalParse(
+                        this.input.matrixArray[i][j].value
+                    )
+                }
+            }
+            this.toMenu()
+        },
+        toMenu() {
+            this.state = "menu"
+        },
+    },
+    computed: {
+        isInputFinished() {
+            return (
+                this.input.matrixCorrectCount !==
+                this.input.matrixHasToBeCorrect
+            )
         },
     },
 })
+
+function rationalParse(str) {
+    let parseRegExp = /^(-?\d+)(\/(\d+))?$/
+    let result = str.match(parseRegExp)
+    if (result[2] === undefined) {
+        return new Rational(result[1])
+    } else {
+        return new Rational(result[1], result[3])
+    }
+}
